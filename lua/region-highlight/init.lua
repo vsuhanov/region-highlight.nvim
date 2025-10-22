@@ -130,10 +130,27 @@ local function apply_highlight_to_buffer(bufnr, range)
     M.highlights[bufnr] = {}
   end
 
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local start_line = range.startLine - 1  -- Convert to 0-indexed
+  local end_line_range = range.endLine - 1  -- Convert to 0-indexed
+
+  -- If start_line is out of bounds, ignore the entire range
+  if start_line >= line_count then
+    return
+  end
+
   -- Apply highlight to each line in the range
-  for line = range.startLine - 1, range.endLine - 1 do
+  for line = start_line, end_line_range do
+    -- Stop if we've gone past the end of the file
+    if line >= line_count then
+      break
+    end
+
+    -- Cap end_line to the maximum available value
+    local end_line = math.min(line + 1, line_count)
+
     local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, M.ns_id, line, 0, {
-      end_line = line + 1,
+      end_line = end_line,
       hl_group = range.hlGroup,
       hl_eol = true,
       priority = 1,
